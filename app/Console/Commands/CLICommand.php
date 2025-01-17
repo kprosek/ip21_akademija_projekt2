@@ -55,15 +55,17 @@ class CLICommand extends Command implements PromptsForMissingInput
 
     protected function handleListCommand(
         TokenPrice $tokenPrice,
-        FavouriteToken $favouriteToken,
         ConsoleView $view
     ) {
         $list = $tokenPrice->getList();
         $view->printList($list);
 
-        $favourites = implode(PHP_EOL, $favouriteToken->getFavouriteTokens());
-        $view->printFavouriteTokens($favourites);
-        if ($favourites === '') {
+        $getFavourites = FavouriteToken::orderBy('token_name', 'asc')->get();
+        $listFavourites = implode(PHP_EOL, $getFavourites->pluck('token_name')->toArray());
+
+        $view->printFavouriteTokens($listFavourites);
+
+        if ($listFavourites === '') {
             $this->line('No favourite tokens added');
         }
 
@@ -75,14 +77,20 @@ class CLICommand extends Command implements PromptsForMissingInput
             $saveUserTokens = [];
             foreach ($saveFavouriteTokenKeys as $key) {
                 if (array_key_exists($key, $list) === false) {
-                    $this->error('Error: You entered a wrong number. Marking token as favourite was not successful');
+                    $this->error('You entered a wrong number. Marking token as favourite was not successful');
                     return;
                 }
                 $saveUserTokens[] = $list[$key];
             }
 
             try {
-                $favouriteToken->insertFavouriteTokens($saveUserTokens);
+                foreach ($saveUserTokens as $token) {
+                    FavouriteToken::updateOrInsert([
+                        'token_name' => $token
+                    ], [
+                        'token_name' => $token
+                    ]);
+                }
                 $this->info('Tokens added to Favourites');
             } catch (\Exception $e) {
                 $this->error('Something went wrong, please try again.');
@@ -91,23 +99,27 @@ class CLICommand extends Command implements PromptsForMissingInput
         }
     }
 
-    protected function handleDeleteCommand(
-        FavouriteToken $favouriteToken,
-    ) {
+    protected function handleDeleteCommand()
+    {
         $removeFavourite = $this->confirm('Do you wish to remove tokens from favourites?');
         if ($removeFavourite) {
             $removeFavouriteTokens = $this->ask('Please enter the tokens you want to remove: ');
             $removeFavouriteTokens = explode(',', str_replace(' ', '', strtoupper($removeFavouriteTokens)));
 
-            $favourites = $favouriteToken->getFavouriteTokens();
-            $tokenIsFavourite = $favouriteToken->verifyTokenFavourite($removeFavouriteTokens, $favourites);
-            if ($tokenIsFavourite === false) {
-                $this->error('Wrong token name, please try again');
-                return;
+            $getFavourites = FavouriteToken::all();
+            $arrayFavourites = $getFavourites->pluck('token_name')->toArray();
+
+            foreach ($removeFavouriteTokens as $token) {
+                if (!in_array($token, $arrayFavourites)) {
+                    $this->error('Wrong token name, please try again');
+                    die;
+                };
             }
 
             try {
-                $favouriteToken->deleteFavouriteTokens($removeFavouriteTokens);
+                foreach ($removeFavouriteTokens as $token) {
+                    FavouriteToken::where('token_name', '=', $token)->delete();
+                }
                 $this->info('Tokens removed from Favourites');
             } catch (\Exception $e) {
                 $this->error('Something went wrong, please try again.');
@@ -137,9 +149,8 @@ class CLICommand extends Command implements PromptsForMissingInput
         }
     }
 
-    protected function handleAddUserCommand(
-        User $user
-    ) {
+    protected function handleAddUserCommand()
+    {
         $email = $this->ask('Please set new username: ');
 
         $validation = validator(['email' => $email], ['email' => 'required|email']);
@@ -157,7 +168,7 @@ class CLICommand extends Command implements PromptsForMissingInput
         }
 
         try {
-            $user->createUser($email, $password);
+            User::create(['email' => $email, 'password' => $password]);
             $this->info('New user registered successfully');
         } catch (\Exception $e) {
             $this->error('Something went wrong, please try again.');
@@ -188,7 +199,7 @@ class CLICommand extends Command implements PromptsForMissingInput
                 break;
 
             case 'list':
-                $this->handleListCommand($tokenPrice, $favouriteToken, $view);
+                $this->handleListCommand($tokenPrice, $view);
                 break;
 
             case 'delete':

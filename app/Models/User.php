@@ -2,24 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Hash;
 
-class User extends Model
+class User extends Authenticatable
 {
-    protected $table = 'users';
-
     protected $fillable = ['email', 'password'];
+    protected $hidden = ['password'];
 
     public $timestamps = false;
 
-    public function createUser(string $username, string $password)
+    public function setPasswordAttribute($value)
     {
-        $passwordHashed = Hash::make($password);
-
-        User::create([
-            'email' => $username,
-            'password' => $passwordHashed,
-        ]);
+        $this->attributes['password'] = Hash::make($value);
     }
 }
