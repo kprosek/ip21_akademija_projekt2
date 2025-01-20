@@ -7,12 +7,50 @@ use Illuminate\Contracts\Console\PromptsForMissingInput;
 use App\Models\TokenPrice;
 use App\Models\FavouriteToken;
 use App\Models\User;
-use App\Utilities\ConsoleView;
 
 class CLICommand extends Command implements PromptsForMissingInput
 {
-    protected $signature = 'cli {arg} {currency1?} {currency2?}';
-    protected $description = 'App CLI functionalities';
+    public function handle()
+    {
+        $arg = $this->argument('arg');
+        $currency1 = $this->argument('currency1');
+        $currency2 = $this->argument('currency2');
+
+        $tokenPrice = new TokenPrice;
+        $favouriteToken = new FavouriteToken;
+        $user = new User;
+
+        switch ($arg) {
+            case 'help':
+                $this->line(
+                    'Available commands:' . PHP_EOL .
+                        '\'list\'           view all available currencies and mark favourites' . PHP_EOL .
+                        '\'delete\'         remove favourite tokens from the list' . PHP_EOL .
+                        '\'price\' BTC EUR  view price' . PHP_EOL .
+                        '\'add user\'       register new user' . PHP_EOL
+                );
+                break;
+
+            case 'list':
+                $this->handleListCommand($tokenPrice);
+                break;
+
+            case 'delete':
+                $this->handleDeleteCommand($favouriteToken);
+                break;
+
+            case 'price':
+                $this->handlePriceCommand($currency1, $currency2, $tokenPrice);
+                break;
+
+            case 'add user':
+                $this->handleAddUserCommand($user);
+                break;
+
+            default:
+                $this->error('Please try again :)');
+        }
+    }
 
     protected function promptForMissingArgumentsUsing(): array
     {
@@ -54,16 +92,18 @@ class CLICommand extends Command implements PromptsForMissingInput
     }
 
     protected function handleListCommand(
-        TokenPrice $tokenPrice,
-        ConsoleView $view
+        TokenPrice $tokenPrice
     ) {
         $list = $tokenPrice->getList();
-        $view->printList($list);
+        foreach ($list as $key => $token) {
+            $this->line($key . ' ' . $token);
+        }
 
         $getFavourites = FavouriteToken::orderBy('token_name', 'asc')->get();
         $listFavourites = implode(PHP_EOL, $getFavourites->pluck('token_name')->toArray());
 
-        $view->printFavouriteTokens($listFavourites);
+        $this->newLine();
+        $this->line('This are your favourite tokens:' . PHP_EOL . $listFavourites);
 
         if ($listFavourites === '') {
             $this->line('No favourite tokens added');
@@ -131,8 +171,7 @@ class CLICommand extends Command implements PromptsForMissingInput
     protected function handlePriceCommand(
         string $currency1,
         string $currency2,
-        TokenPrice $tokenPrice,
-        ConsoleView $view
+        TokenPrice $tokenPrice
     ) {
         $list = $tokenPrice->getList();
 
@@ -141,11 +180,12 @@ class CLICommand extends Command implements PromptsForMissingInput
         $this->verifyCurrencyList($currency2, $list, $tokenPrice);
 
         $currentPrice = $tokenPrice->getCurrencyPair($currency1, $currency2);
+
         if ($currentPrice['success'] === false) {
             $this->error($currentPrice['error']);
         }
         if ($currentPrice['success'] === true) {
-            $view->printPricePair($currentPrice['currency pair']);
+            $this->info(sprintf('%s: %.2f %s', $currentPrice['currency pair']['data']['base'], $currentPrice['currency pair']['data']['amount'], $currentPrice['currency pair']['data']['currency']));
         }
     }
 
@@ -153,10 +193,12 @@ class CLICommand extends Command implements PromptsForMissingInput
     {
         $email = $this->ask('Please set new username: ');
 
-        $validation = validator(['email' => $email], ['email' => 'required|email']);
+        $validation = validator(['email' => $email], ['email' => 'required|email'], ['required' => 'Please set a Username', 'email' => 'Username must be an email']);
 
         if ($validation->fails()) {
-            $this->error('Username must be an email');
+            foreach ($validation->errors()->all() as $message) {
+                $this->error($message);
+            }
             return;
         }
 
@@ -176,46 +218,6 @@ class CLICommand extends Command implements PromptsForMissingInput
         }
     }
 
-    public function handle()
-    {
-        $arg = $this->argument('arg');
-        $currency1 = $this->argument('currency1');
-        $currency2 = $this->argument('currency2');
-
-        $tokenPrice = new TokenPrice;
-        $favouriteToken = new FavouriteToken;
-        $user = new User;
-        $view = new ConsoleView;
-
-        switch ($arg) {
-            case 'help':
-                $this->line(
-                    'Available commands:' . PHP_EOL .
-                        '\'list\'           view all available currencies and mark favourites' . PHP_EOL .
-                        '\'delete\'         remove favourite tokens from the list' . PHP_EOL .
-                        '\'price\' BTC EUR  view price' . PHP_EOL .
-                        '\'add user\'       register new user' . PHP_EOL
-                );
-                break;
-
-            case 'list':
-                $this->handleListCommand($tokenPrice, $view);
-                break;
-
-            case 'delete':
-                $this->handleDeleteCommand($favouriteToken);
-                break;
-
-            case 'price':
-                $this->handlePriceCommand($currency1, $currency2, $tokenPrice, $view);
-                break;
-
-            case 'add user':
-                $this->handleAddUserCommand($user);
-                break;
-
-            default:
-                $this->error('Please try again :)');
-        }
-    }
+    protected $signature = 'cli {arg} {currency1?} {currency2?}';
+    protected $description = 'App CLI functionalities';
 }
