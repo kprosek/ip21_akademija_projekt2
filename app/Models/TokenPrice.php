@@ -30,23 +30,23 @@ class TokenPrice extends Model
             return $this->listOfCurrencies;
         }
 
-        $listCurrencies = $this->getApiData('currencies');
-        if ($listCurrencies === false) {
-            return $listCurrencies;
+        $listCurrency1 = $this->getApiData('currencies');
+        if ($listCurrency1 === false) {
+            return $listCurrency1;
         }
 
-        $listCrypto = $this->getApiData('currencies/crypto');
-        if ($listCrypto === false) {
-            return $listCrypto;
+        $listCurrency2 = $this->getApiData('currencies/crypto');
+        if ($listCurrency2 === false) {
+            return $listCurrency2;
         }
 
         $list = [];
-        foreach ($listCurrencies['data'] as $data) {
+        foreach ($listCurrency1['data'] as $data) {
             $list[] = $data['id'];
         }
         asort($list);
 
-        foreach ($listCrypto['data'] as $data) {
+        foreach ($listCurrency2['data'] as $data) {
             $list[] = $data['code'];
         }
         asort($list);
@@ -81,9 +81,9 @@ class TokenPrice extends Model
         return ['success' => true];
     }
 
-    public function getCurrencyPair(string $cryptoGet, string $currencyGet): array
+    public function getCurrencyPair(string $currency1Get, string $currency2Get): array
     {
-        $api = 'prices/' . $cryptoGet . '-' . $currencyGet . '/spot';
+        $api = 'prices/' . $currency1Get . '-' . $currency2Get . '/spot';
         $currencyPair = $this->getApiData($api);
         if ($currencyPair === false) {
             return [

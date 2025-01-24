@@ -1,0 +1,243 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+
+  --text-primary: hsla(0, 0%, 100%, 0.76);
+  --text-hover: hsl(0, 4%, 5%);
+  --text-error: hsl(0, 68%, 38%);
+  --background-primary: hsl(0, 4%, 5%);
+  --border-glow: hsl(0, 19%, 92%, 0.1);
+  --border-primary: hsla(0, 0%, 100%, 0.76);
+  --btn-hover: hsla(0, 17%, 92%, 0.701);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: auto auto;
+  
+  
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+  font-family: 'Roboto', sans-serif;
+  font-size: 1rem;
+  max-width: 100rem;
+  height: 100vh;
+}
+
+header{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 50%;
+}
+
+main {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.section-border {
+  margin: 1rem;
+  padding: 1.5rem;
+  width: 100%;
+  text-align: center;
+  border: 1px solid var(--text-primary);
+  border-radius: 1.5rem;
+}
+
+.section-border-price {
+  margin: 1rem;
+  padding: 1.5rem;
+  width: 100%;
+  text-align: center;
+  border: 1px solid var(--text-primary);
+  border-radius: 1.5rem;
+  box-shadow: 0 0 20px 10px var(--border-glow);
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/*HEADINGS*/
+
+h1 {
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+h2 {
+  padding-left: 1rem;
+}
+
+/* TEXTS */
+
+label {
+  font-size: inherit;
+  text-transform: uppercase;
+}
+
+.text-error {
+  font-size: 0.85rem;
+  color:var(--text-error);
+  text-transform: capitalize;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.text-token-price {
+  text-transform: uppercase;
+  font-weight: 800;
+  margin: 0 auto;
+}
+
+.text-footer {
+  font-style: italic;
+  margin-top:2rem;
+}
+
+/* BUTTONS */
+
+.btn{
+  font-size: inherit;
+  text-transform: uppercase;
+  padding: 0.5rem;
+  color: var(--text-primary);
+  background-color: var(--background-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  box-shadow: inset 0 15px 15px var(--border-glow);
+}
+
+.btn:hover {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-favourite{
+  cursor: pointer;
+  border: none;
+  background-color: transparent;
+  box-shadow: none;
+  margin-bottom: 0.5rem;
+}
+
+.btn-login, .btn-logout {
+  text-decoration: none;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  margin-left: 3rem;
+  margin-right: 1rem;
+}
+
+.btn-login:hover, .btn-login:hover{
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-back {
+  text-decoration: none;
+  color:var(--text-primary);
+  text-align: center;
+  width: 200px;
+}
+
+/* INDEX AND PRICE PAGE */
+.section-logout {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.section-title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Favourites Section */
+ul {
+  display: flex;
+  flex-wrap: wrap;
+  list-style-type: none;
+  font-size: inherit;
+  padding: 1rem;
+}
+
+.list-favourites ul li {
+  width: 25%;
+  text-align: center;
+}
+
+/* Token Section */
+.form-select-tokens {
+  display: flex;
+  justify-content: space-around;
+  align-items: last baseline;
+  padding: 1rem;
+}
+
+.section-select-token {
+  display: flex;
+  flex-direction: column;
+}
+
+select {
+  font-size: inherit;
+  padding: 0.5rem;
+  color: var(--text-primary);
+  text-align: center;
+  background-color: var(--background-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  box-shadow: inset 0 15px 15px var(--border-glow);
+}
+
+select:hover {
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btn-price {
+  width: 30%;
+}
+
+.fa-magnifying-glass{
+  margin-right: 0.5rem;
+}
+
+/*LOGIN PAGE */
+
+.section-login {
+  display: flex;
+  justify-content: end;
+  width: 100%;
+}
+
+.form-login{
+  display: flex;
+  flex-direction: column;
+  width: 200px;
+  margin: 2rem auto;
+}
+
+input {
+  font-size: inherit;
+  padding: 0.25rem;
+  margin:0.5rem 0 1rem;
+}

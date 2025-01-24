@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Console\PromptsForMissingInput;
+use Illuminate\Support\Facades\Auth;
 use App\Models\TokenPrice;
-use App\Models\FavouriteToken;
 use App\Models\User;
 
 class CLICommand extends Command implements PromptsForMissingInput
@@ -16,8 +16,10 @@ class CLICommand extends Command implements PromptsForMissingInput
         $currency1 = $this->argument('currency1');
         $currency2 = $this->argument('currency2');
 
+        $id = 0;
+        Auth::loginUsingId($id);
+
         $tokenPrice = new TokenPrice;
-        $favouriteToken = new FavouriteToken;
         $user = new User;
 
         switch ($arg) {
@@ -32,11 +34,11 @@ class CLICommand extends Command implements PromptsForMissingInput
                 break;
 
             case 'list':
-                $this->handleListCommand($tokenPrice);
+                $this->handleListCommand($tokenPrice, $id);
                 break;
 
             case 'delete':
-                $this->handleDeleteCommand($favouriteToken);
+                $this->handleDeleteCommand($id);
                 break;
 
             case 'price':
@@ -55,7 +57,7 @@ class CLICommand extends Command implements PromptsForMissingInput
     protected function promptForMissingArgumentsUsing(): array
     {
         return [
-            'arg' => 'Please enter \'help\' for instructions how to use this app',
+            'arg' => 'Please enter \'help\' for instructions on how to use this app',
         ];
     }
 
@@ -64,8 +66,8 @@ class CLICommand extends Command implements PromptsForMissingInput
         $validation = validator(
             ['arg1' => $arg1, 'arg2' => $arg2],
             [
-                'arg1' => 'required|min:3|max:10',
-                'arg2' => 'required|min:3|max:10',
+                'arg1' => ['required', 'min:3', 'max:10'],
+                'arg2' => ['required', 'min:3', 'max:10'],
             ],
             [
                 'required' => 'Please specify both tokens you wish to compare',
@@ -92,14 +94,15 @@ class CLICommand extends Command implements PromptsForMissingInput
     }
 
     protected function handleListCommand(
-        TokenPrice $tokenPrice
+        TokenPrice $tokenPrice,
+        int $id
     ) {
         $list = $tokenPrice->getList();
         foreach ($list as $key => $token) {
             $this->line($key . ' ' . $token);
         }
 
-        $getFavourites = FavouriteToken::orderBy('token_name', 'asc')->get();
+        $getFavourites = User::find($id)->favourites()->orderBy('token_name', 'asc')->get();
         $listFavourites = implode(PHP_EOL, $getFavourites->pluck('token_name')->toArray());
 
         $this->newLine();
@@ -125,11 +128,7 @@ class CLICommand extends Command implements PromptsForMissingInput
 
             try {
                 foreach ($saveUserTokens as $token) {
-                    FavouriteToken::updateOrInsert([
-                        'token_name' => $token
-                    ], [
-                        'token_name' => $token
-                    ]);
+                    User::find($id)->favourites()->updateOrInsert(['user_id' => $id, 'token_name' => $token], []);
                 }
                 $this->info('Tokens added to Favourites');
             } catch (\Exception $e) {
@@ -139,14 +138,14 @@ class CLICommand extends Command implements PromptsForMissingInput
         }
     }
 
-    protected function handleDeleteCommand()
+    protected function handleDeleteCommand(int $id)
     {
         $removeFavourite = $this->confirm('Do you wish to remove tokens from favourites?');
         if ($removeFavourite) {
             $removeFavouriteTokens = $this->ask('Please enter the tokens you want to remove: ');
             $removeFavouriteTokens = explode(',', str_replace(' ', '', strtoupper($removeFavouriteTokens)));
 
-            $getFavourites = FavouriteToken::all();
+            $getFavourites = User::find($id)->favourites()->get();
             $arrayFavourites = $getFavourites->pluck('token_name')->toArray();
 
             foreach ($removeFavouriteTokens as $token) {
@@ -158,7 +157,7 @@ class CLICommand extends Command implements PromptsForMissingInput
 
             try {
                 foreach ($removeFavouriteTokens as $token) {
-                    FavouriteToken::where('token_name', '=', $token)->delete();
+                    User::find($id)->favourites()->where('token_name', $token)->delete();
                 }
                 $this->info('Tokens removed from Favourites');
             } catch (\Exception $e) {
@@ -169,8 +168,8 @@ class CLICommand extends Command implements PromptsForMissingInput
     }
 
     protected function handlePriceCommand(
-        string $currency1,
-        string $currency2,
+        ?string $currency1,
+        ?string $currency2,
         TokenPrice $tokenPrice
     ) {
         $list = $tokenPrice->getList();
@@ -193,7 +192,7 @@ class CLICommand extends Command implements PromptsForMissingInput
     {
         $email = $this->ask('Please set new username: ');
 
-        $validation = validator(['email' => $email], ['email' => 'required|email'], ['required' => 'Please set a Username', 'email' => 'Username must be an email']);
+        $validation = validator(['email' => $email], ['email' => ['required', 'email']], ['required' => 'Please set a Username', 'email' => 'Username must be an email']);
 
         if ($validation->fails()) {
             foreach ($validation->errors()->all() as $message) {
